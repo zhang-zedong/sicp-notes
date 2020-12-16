@@ -18,6 +18,7 @@
     (+ (square (max a b)) (square (max (min a b) c) ) ))
 
 
+
 ; 1.1.7 Example
 ; Changed the program to the answer of Exercise 1.7.
 (define (sqrt-iter guess last x)
@@ -39,3 +40,18 @@
 
 (define (abs x)
     (if (< x 0) (- x) x))
+
+
+
+; Exercise 1.8 cube-root
+
+(define (cube-root x)
+    (cube-root-iter 1.0 10 x))
+
+(define (cube-root-iter guess last x)
+    (if (good-enough? guess last)
+        guess
+        (cube-root-iter (improve-cube guess x) guess x)))
+
+(define (improve-cube y x)
+    (/ (+ (/ x (* y y)) (* 2 y)) 3))
