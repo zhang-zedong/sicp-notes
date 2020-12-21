@@ -28,3 +28,15 @@
             (else (+ a (recur a (- b 1))))))
     (recur a b)
 )
+
+; r is the accumulater or resource
+(define (*-iter a b)
+    (define (double x) (+ x x))
+    (define (halve x) (/ x 2))
+    (define (iter a b r)
+        (cond ((= b 0) r)
+            ((even? b) (iter (double a) (halve b) r))
+            (else (iter a (- b 1) (+ a r)))))
+    
+    (iter a b 0)
+)
