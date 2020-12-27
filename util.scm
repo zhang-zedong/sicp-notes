@@ -18,7 +18,7 @@
     (fermat-test? n 3))
 
 
-; a > b
+; 不用 a>b 也行，第一次运算余数就反过来了。
 (define (gcd a b)
     (if (= b 0)
         a

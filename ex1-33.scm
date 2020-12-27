@@ -15,10 +15,9 @@
 ;product-of-relative-primes
 (define (f2 n)
     (define (prime-n? i)
-        (and (> i 0) (= (gcd i n) 1)))
+        (and (> i 0) (= (gcd m i) 1)))
     (filtered-accumulate * 1 identity 1 inc n prime-n?))
 
-; a > b
 (define (gcd a b)
     (if (= b 0)
         a
