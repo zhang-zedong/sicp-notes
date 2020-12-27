@@ -2,14 +2,14 @@
 
 (define (simpson-integrate f a b n)
     (define h
-        (* (/ (- b a) n)))
+        (/ (- b a) n))
     (define (inc i)
         (+ i 1))
     (define (term i)
         (define g
             (f (+ a (* i h))))
         (cond
-            ((or (= i 0) (= i b))
+            ((or (= i 0) (= i n))  ;再检查好几遍，发现这个地方应该是n，之前写成b了。
                 g)
             ((even? i)
                 (* 2 g))
