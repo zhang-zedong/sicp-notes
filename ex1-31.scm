@@ -21,4 +21,12 @@
     (product identity 1 inc n))
 
 (define (calc-pi n)
-    ())
+    (define (pi-term i)
+        (square
+            (/
+                (+ 2 (* 2 i))
+                (+ 1 (* 2 i)))))
+    (*
+        8.0
+        (product-i pi-term 1 inc n)
+        (/ 1 (+ 1 (* 2 (+ n 1))))))
