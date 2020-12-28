@@ -38,3 +38,12 @@
                                    (+ 1 (/ (- i r) 3)))
                                 1)))
                     k)))
+
+
+; square 有重复计算， 可以加let消解
+(define (tan-cf x k)
+    (cont-frac  (lambda (i) 
+                    (if (= i 1) (* 1.0 x) (- (square x))))
+                (lambda (i)
+                    (- (* 2 i) 1))
+                k))
