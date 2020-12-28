@@ -1,2 +1,2 @@
 #/bin/bash
-git add . && git commit -m "add"
+git add . && git commit -m "add/edit"

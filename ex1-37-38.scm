@@ -26,3 +26,15 @@
     (cont-frac-i  (lambda (i) 1.0)
                 (lambda (i) 1.0)
                 k))
+
+
+(define (e k)
+    (+  2
+        (cont-frac  (lambda (i) 1.0)
+                    (lambda (i)
+                        (let ((r (remainder i 3)))
+                            (if (= r 2)
+                                (* 2
+                                   (+ 1 (/ (- i r) 3)))
+                                1)))
+                    k)))
