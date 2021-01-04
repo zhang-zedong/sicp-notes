@@ -36,8 +36,15 @@
 
 
 ; 开x的n次方根号，m为 average-damp 次数
-(define (n-root x n m)
+(define (n-root-1 x n m)
     (fixed-point ((repeated average-damp m)
+                    (lambda (y) (/ x (exp y (- n 1)))))
+                 1.0))
+
+(define (root x n)
+    (define (calc-time n)
+        (floor (/ (log n) (log 2))))
+    (fixed-point ((repeated average-damp (calc-time n))
                     (lambda (y) (/ x (exp y (- n 1)))))
                  1.0))
 
