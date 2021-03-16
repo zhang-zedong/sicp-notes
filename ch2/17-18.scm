@@ -24,3 +24,6 @@
             result
             (iter (cdr items) (cons (car items) result))))
     (iter li ()))
+
+; test
+(reverse-2 (list 1 2 3 4 5))
