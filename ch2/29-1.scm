@@ -2,24 +2,24 @@
 
 ; constructors
 (define (make-mobile left right)
-  (list left right))
+  (cons left right))
 
 (define (make-branch length structure)
-  (list length structure))
+  (cons length structure))
 
 ; selectors
 (define (left-branch mobile)
   (car mobile))
 
 (define (right-branch mobile)
-  (car (cdr mobile)))
+  (cdr mobile))
 
 (define (branch-length structure)
   (car structure))
 
 ; get structure, which is mobile or weight
 (define (branch-structure structure)
-  (car (cdr structure)))
+  (cdr structure))
 
 ; usages
 ; 这里如果用if的话，会出问题，let的部分会提前加载一样。
