@@ -43,12 +43,12 @@
             (accumulate proc initial (cdr sequence)))))
 
 ; final answer function
-(define (triples-no-more-than n s)
-  (filter (sum-less-than? s) (ordered-triples n)))
+(define (triples-sum-to n s)
+  (filter (sum-equal? s) (ordered-triples n)))
 
-(define (sum-less-than? s)
+(define (sum-equal? s)
   (lambda (triple)
-    (<= (sum-triple triple) s)))
+    (= (sum-triple triple) s)))
 
 (define (sum-triple triple)
   (+ (car triple)
