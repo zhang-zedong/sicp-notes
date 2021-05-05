@@ -21,7 +21,7 @@
       (lambda (x y) (tag (make-from-real-imag x y))))
   (put 'make-from-mag-ang 'rectangular
       (lambda (r a) (tag (make-from-mag-ang r a))))
-  'done)
+  '(install-rectangular-package done))
 ; polar implementation
 (define (install-polar-package)
   ;; iternal procedures
@@ -43,8 +43,8 @@
        (lambda (x y) (tag (make-from-real-imag x y))))
   (put 'make-from-mag-ang 'polar
        (lambda (r a) (tag (make-from-mag-ang r a))))
-  'done)
-; put it together 
+  '(install-polar-package done))
+; put it together
 (define (apply-generic op . args)
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
@@ -53,7 +53,7 @@
           (error
             "No method for these types: APPLY-GENERIC"
             (list op type-tags))))))
-
+; generic function or API
 (define (real-part z) (apply-generic 'real-part z))
 (define (imag-part z) (apply-generic 'imag-part z))
 (define (magnitude z) (apply-generic 'magnitude z))
@@ -73,6 +73,17 @@
   (if (pair? datum)
       (cdr datum)
       (error "Bad tagged datum: CONTENTS" datum)))
+; put and get borrowed
+(define *op-table* (make-hash-table))
+(define (put op type proc)
+  (hash-table/put! *op-table* (list op type) proc))
+(define (get op type)
+  (hash-table/get *op-table* (list op type) #f))
+;; install package
+(install-rectangular-package)
+(install-polar-package)
+
 ; test
-(define a (make-from-real-imag 1 1))
-(define b (make-from-mag-ang 1 0.5))
+; (define a (make-from-real-imag 1 1))
+; (define b (make-from-mag-ang 1 1))
+; then test the API function

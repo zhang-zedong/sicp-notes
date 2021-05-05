@@ -33,10 +33,16 @@
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 (define (sum? x) (and (pair? x) (eq? (car x) '+)))
 (define (addend s) (cadr s))
-(define (augend s) (caddr s))
+(define (augend s)
+  (if (= (length s) 3)
+      (caddr s)
+      (append '(+) (cddr s))))
 (define (product? x) (and (pair? x) (eq? (car x) '*)))
 (define (multiplier p) (cadr p))
-(define (multiplicand p) (caddr p))
+(define (multiplicand p)
+  (if (= (length p) 3)
+      (caddr p)
+      (append '(*) (cddr p))))
 
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
@@ -53,6 +59,6 @@
         (else (list '* m1 m2))))
 
 ; test
-(deriv '(** x 4) 'x)
-(deriv '(** (* x y) 4) 'x)
-(deriv '(** (+ x y) 4) 'x)
+; (deriv '(+ x x x) 'x)
+; (deriv '(* x x x) 'x)
+; (deriv '(* x y (+ x 3)) 'x)
