@@ -1,5 +1,6 @@
-; 这个版本只考虑 + * ，还没考虑 ** 的兼容性
+; 想了好久做出来了这一道题，优化前单独备份一遍。不用git，就是为了放在主目录。
 ; sec 2.3.2
+; plus exercise
 ; 全是*才是*，有+则+
 (define (deriv exp var)
   (cond ((number? exp) 0)
@@ -20,6 +21,7 @@
         (else
           (error "unknown expression type: DERIV" exp))))
 ; exponentiation
+; exp 里面 由于有 (- exp 1) 导致这个地方不是数字会报错, 改为(make-sum exp -1)
 (define (exponentiation? x)
   (and (pair? x) (eq? (cadr x) '**)))
 (define (base s) (car s))
@@ -45,7 +47,8 @@
 (define (sum? x)
   (if (or (not (pair? x)) (= (length x) 1))
       #f
-      (or (eq? (cadr x) '+) (sum? (cddr x)))))
+      (or (and (pair? x) (eq? (cadr x) '+))
+          (sum? (cddr x)))))
 (define (addend s)
   (define (recur s)
     (if (or (null? s) (eq? (car s) '+))
@@ -71,12 +74,13 @@
 ; (product? '(x * x * x)) (product? '(x * x + x)) (product? '(x * x * x + x))
 (define (product? x)
   (define (recur? x)
+    ;(begin (display x) (newline)
       (cond ((not (pair? x)) #f)
             ((= (length x) 1) #t)
             (else (and (eq? (cadr x) '*) (recur? (cddr x))))))
-  (and (pair? x)
-       (> (length x) 2)
-       (recur? x)))
+  (cond ((not (pair? x)) #f)
+        ((= (length x) 1) #f)
+        (else (recur? x))))
 ; (deriv '((x + x) * x * x + (x + (x * (x + x)))) 'x)
 ; '(x * x * x) '(x * x * x * x) '((x * x) * x * (x * (x + x)))
 ; test place
@@ -95,3 +99,32 @@
         ((=number? m2 1) m1)
         ((and (number? m1) (number? m2)) (* m1 m2))
         (else (list m1 '* m2))))
+
+; maker with combination for special case
+
+; 这个地方不能用append，把原有的括号结构给拍没了
+; test
+; 遇到这个问题，除非改perdicates，所以遇到乘号，可能是加号，然后只要里面有加号，就是加号。这个就是计算最外层的。
+; 找到所有的加法，然后中间的全加上括号，即找到最外层的所有加法，然后中间都是括号，分别运算，只有遇到全乘法，才是乘法，否则，就是加法
+; 因为加法优先级低，先解析出来，参数自然是优先级高的了。
+
+; 关于exp n只能是证书，
+; A:
+; (deriv '(x * (x * x)) 'x)
+; (deriv '((x * x) * x) 'x)
+; (deriv '(x + (x + x)) 'x)
+; (deriv '((x + x) + x) 'x)
+; (deriv '(x * (x + x)) 'x)
+; (deriv '(x ** 10) 'x)
+; (deriv '(x ** (5 * 5)) 'x)
+; (deriv '(x ** (1 + y)) 'x)
+; (deriv '(x ** x) 'x)
+; (deriv '(x + (3 * (x ** (y + 2)))) 'x)
+; B:
+; (deriv '(x + x + x) 'x)
+; (deriv '(x + (x + (x + x))) 'x)
+; (deriv '(x + (x + (x * x))) 'x)
+
+; (deriv '(x + (3 * (x + (y + 2)))) 'x)
+; (deriv '(x * (x + (x * x))) 'x)
+; (deriv '(x * (x * x)) 'x)
