@@ -84,6 +84,7 @@
 (install-polar-package)
 
 ; test
-; (define a (make-from-real-imag 1 1))
-; (define b (make-from-mag-ang 1 1))
-; then test the API function
+(define a (make-from-real-imag 1 1))
+(define b (make-from-mag-ang 1 1))
+; (real-part a)
+; (imag-part z)
