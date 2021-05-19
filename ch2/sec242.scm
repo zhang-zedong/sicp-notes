@@ -1,3 +1,4 @@
+; Strategy 1 : Generice Operation with explicit dispatch
 ; tag
 (define (attach-tag type-tag contents)
   (cons type-tag contents))

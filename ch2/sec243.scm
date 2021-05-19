@@ -1,3 +1,4 @@
+; Strategy 2 : Data-directed Style
 ;; rectangular implementation
 (define (install-rectangular-package)
   ;; internal procedures
