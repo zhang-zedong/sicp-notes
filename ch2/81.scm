@@ -9,6 +9,8 @@
   (apply-generic 'div x y))
 (define (equ? x y)
   (apply-generic 'equ? x y))
+(define (exp x y)
+  (apply-generic 'exp x y))
 (define (=zero? x)
   (apply-generic '=zero? x))
 ; scheme number
@@ -26,6 +28,8 @@
        =)
   (put '=zero? '(scheme-number)
        zero?)
+  (put 'exp '(scheme-number scheme-number)
+       (lambda (x y) (tag (expt x y))))
   (put 'make 'scheme-number (lambda (x) (tag x)))
   'done)
 (define (make-scheme-number n)
@@ -175,9 +179,45 @@
     (let ((proc (get op type-tags)))
       (if proc
           (apply proc (map contents args))
-          (error
-            "No method for these types: APPLY-GENERIC"
-            (list op type-tags))))))
+          (if (= (length args) 2)
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (if (eq? type1 type2)
+                    (error "No method for these types"
+                           (list op type-tags))
+                    (let ((t1->t2 (get-coercion type1 type2))
+                          (t2->t1 (get-coercion type2 type1)))
+                        (cond (t1->t2
+                                (apply-generic op (t1->t2 a1) a2))
+                              (t2->t1
+                                (apply-generic op a1 (t2->t1 a2)))
+                              (else (error "No method for these types"
+                                          (list op type-tags)))))))
+              (error "No method for these types"
+                     (list op type-tags)))))))
+; coercion table
+(define *coercion-table* (make-hash-table))
+(define (put-coercion type1 type2 proc)
+  (hash-table/put! *coercion-table* (list type1 type2) proc))
+(define (get-coercion type1 type2)
+  (hash-table/get *coercion-table* (list type1 type2) #f))
+; 这个是错的，直接写成 '(type1 type2) 了，不是变量了
+; (define (put-coercion type1 type2 proc)
+;   (hash-table/put! *coercion-table* '(type1 type2) proc))
+; (define (get-coercion type1 type2)
+;   (hash-table/get *coercion-table* '(type1 type2) #f))
+
+; coercion
+(define (scheme-number->complex n)
+  (make-complex-from-real-imag (contents n) 0))
+(put-coercion 'scheme-number 'complex scheme-number->complex)
+; 2.81 a
+; (define (scheme-number->scheme-number n) n)
+; (define (complex->complex z) z)
+; (put-coercion 'scheme-number 'scheme-number scheme-number->scheme-number)
+; (put-coercion 'complex 'complex complex->complex)
 ; generic function or API
 (define (real-part z) (apply-generic 'real-part z))
 (define (imag-part z) (apply-generic 'imag-part z))
@@ -216,14 +256,14 @@
 (install-complex-package)
 
 ; test
-; (=zero? 1)
-; (=zero? 0)
-; (=zero? (make-rational 1 2))
-; (=zero? (make-rational 0 2))
-; (=zero? (make-complex-from-real-imag 1 3))
-; (=zero? (make-complex-from-real-imag 0 0))
-; (=zero? (make-complex-from-real-imag 0 1))
-; (=zero? (make-complex-from-mag-ang 0 1))
-; (=zero? (make-complex-from-mag-ang 0 0))
-
-
+; (add 4 (make-complex-from-real-imag 1 1))
+; (add 4 (make-complex-from-mag-ang 1 1))
+; (add (make-complex-from-real-imag 1 1) 4)
+; (add (make-complex-from-mag-ang 1 1) 4)
+; (hash-table/get *coercion-table* '(complex scheme-number) #f)
+; (hash-table/get *coercion-table* '(scheme-number complex) #f)
+; '(complex scheme-number) (list 'complex 'scheme-number) type1成符号，而不是变量了。
+; (exp 2 3)
+; (exp (make-complex-from-real-imag 1 1) (make-complex-from-real-imag 1 1))
+; (exp 2 (make-complex-from-real-imag 1 1))
+; (exp (make-complex-from-real-imag 1 1) 2)
