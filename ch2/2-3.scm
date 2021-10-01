@@ -1,3 +1,4 @@
+; Exercise 2.2 and 2.3
 (define (make-segment start-point end-point)
     (cons start-point end-point))
 
