@@ -32,7 +32,7 @@
     (error "Spans zero: DIV-INTERVAL Y" y)
     (mul-interval
       x
-      (make-interval 
+      (make-interval
         (/ 1.0 (upper-bound y))
         (/ 1.0 (lower-bound y))))))
 
@@ -54,6 +54,7 @@
       ((and (< a 0) (>= b 0) (>= c 0)) (make-interval (* a d) (* b d)))
       ((and (< a 0) (>= b 0) (< c 0) (>= d 0))
        (make-interval (min (* a d) (* b c)) (max (* a c) (* b d)))))))
+; 别人的答案吧区间判断抽象成函数, 如 positive-interval? negative-interval? spans-zero?
 
 ; case for 11
 (define a (make-interval 1 2))
