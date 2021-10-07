@@ -1,5 +1,8 @@
+; sec 2.3.2
+; current rule: 有+则+，有*则乘，有**则**。完全按照优先级来的any逻辑。
+; 递归定义，符号优先级蕴含在判断顺序中
+; 已完成基本功能，没有简化算式。同时没有使用memq等更简单逻辑，用的函数有些primitive，别人的答案琢磨多了，确实更精巧。
 #lang sicp
-; 这个sicp里，()应该是非法的，得找下None
 (define (deriv exp var)
   (cond ((number? exp) 0)
         ((variable? exp) (if (same-variable? exp var) 1 0))
@@ -19,10 +22,15 @@
         (else
           (error "unknown expression type: DERIV" exp))))
 ; exponentiation
+; (deriv '(x ** x ** y) 'x)
+; (deriv '(x ** x ** x) 'x)
 (define (exponentiation? x)
   (and (pair? x) (eq? (cadr x) '**)))
 (define (base s) (car s))
-(define (exponent s) (caddr s))
+(define (exponent s)
+  (if (= (length s ) 3)
+      (caddr s)
+      (cddr s)))
 (define (make-exponentiation base exponent)
   (cond ((=number? base 0) 0)
         ((=number? exponent 0) 1)
@@ -39,7 +47,7 @@
 ; (augend '(x * x + x + x + x)) (addend '(x * x + x + x + x))
 ; (augend '(x * x + (x + x + x))) (addend '(x * x + (x + x + x)))
 ; (deriv '((x * x) + x + (x * x)) 'x) (addend '((x * x) + x + (x * x))) (augend '((x * x) + x + (x * x)))
-; (deriv '((x + x) + x + x + (x + (x + (x + x)))) 'x)
+;; (deriv '((x + x) + x + x + (x + (x + (x + x)))) 'x)
 ; (sum? '(x * x * x))
 (define (sum? x)
   (if (or (not (pair? x)) (= (length x) 1))
@@ -48,7 +56,7 @@
 (define (addend s)
   (define (recur s)
     (if (or (null? s) (eq? (car s) '+))
-        ()
+        nil
         (cons (car s) (recur (cdr s)))))
   (let ((ans (recur s)))
        (if (= (length ans) 1)
@@ -69,28 +77,35 @@
 ; product
 ; (product? '(x * x * x)) (product? '(x * x + x)) (product? '(x * x * x + x))
 (define (product? x)
-  (define (recur? x)
-      (cond ((not (pair? x)) #f)
-            ((= (length x) 1) #t)
-            (else (and (eq? (cadr x) '*) (recur? (cddr x))))))
-  (and (pair? x)
-       (> (length x) 2)
-       (recur? x)))
+  (if (or (not (pair? x)) (= (length x) 1))
+      #f
+      (or (eq? (cadr x) '*) (product? (cddr x)))))
 ; (deriv '((x + x) * x * x + (x + (x * (x + x)))) 'x)
 ; '(x * x * x) '(x * x * x * x) '((x * x) * x * (x * (x + x)))
 ; test place
-(define t1 '(x * x * x))
-(define t2 '(x * x * x * x))
-(define t3 '((x * x) * x * (x * (x + x))))
+; (multiplicand '(x * x * x))
+; (multiplicand '(x * x * x * x))
+; (multiplicand '(x * x ** x))
+; (multiplicand '(x ** x * x))
 (define (multiplier p)
-  (car p))
+  (cond
+    ((= (length p) 3) (car p))
+    ((eq? (cadr p) '*) (car p))
+    (else (append (list (car p) (cadr p)) (list (multiplier (cddr p)))))))
 (define (multiplicand p)
-  (if (= (length p) 3)
-      (caddr p)
-      (cddr p)))
+  (cond
+    ((= (length p) 3) (caddr p))
+    ((eq? (cadr p) '*) (cddr p))
+    (else (multiplicand (cddr p)))))
 (define (make-product m1 m2)
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
         ((=number? m1 1) m2)
         ((=number? m2 1) m1)
         ((and (number? m1) (number? m2)) (* m1 m2))
         (else (list m1 '* m2))))
+
+; mix
+; (deriv '(x * x * x + x * x) 'x)
+; (deriv '((x + x) * (x ** 3)) 'x)
+; (deriv '((x + x) * x ** 3) 'x)
+

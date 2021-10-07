@@ -1,7 +1,9 @@
-; 想了好久做出来了这一道题，优化前单独备份一遍。不用git，就是为了放在主目录。
 ; sec 2.3.2
 ; plus exercise
-; 全是*才是*，有+则+
+; 还没写出来
+; 运算 prefix -> infix
+#lang sicp
+; deriv
 (define (deriv exp var)
   (cond ((number? exp) 0)
         ((variable? exp) (if (same-variable? exp var) 1 0))
@@ -37,33 +39,10 @@
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 (define (=number? exp num) (and (number? exp) (= exp num)))
 ; sum
-; test
-; (sum? '(x * x * x + x)) (addend '(x * x * x + x)) (augend '(x * x * x + x))
-; (augend '(x * x + x + x + x)) (addend '(x * x + x + x + x))
-; (augend '(x * x + (x + x + x))) (addend '(x * x + (x + x + x)))
-; (deriv '((x * x) + x + (x * x)) 'x) (addend '((x * x) + x + (x * x))) (augend '((x * x) + x + (x * x)))
-; (deriv '((x + x) + x + x + (x + (x + (x + x)))) 'x)
-; (sum? '(x * x * x))
-(define (sum? x)
-  (if (or (not (pair? x)) (= (length x) 1))
-      #f
-      (or (and (pair? x) (eq? (cadr x) '+))
-          (sum? (cddr x)))))
-(define (addend s)
-  (define (recur s)
-    (if (or (null? s) (eq? (car s) '+))
-        ()
-        (cons (car s) (recur (cdr s)))))
-  (let ((ans (recur s)))
-       (if (= (length ans) 1)
-           (car ans)
-           ans)))
+(define (sum? x) (and (pair? x) (eq? (cadr x) '+)))
+(define (addend s) (car s))
 (define (augend s)
-  (if (eq? (car s) '+)
-      (if (= (length (cdr s)) 1)
-          (cadr s)
-          (cdr s))
-      (augend (cdr s))))
+  (caddr s))
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
         ((=number? a2 0) a1)
@@ -71,28 +50,11 @@
          (+ a1 a2))
         (else (list a1 '+ a2))))
 ; product
-; (product? '(x * x * x)) (product? '(x * x + x)) (product? '(x * x * x + x))
-(define (product? x)
-  (define (recur? x)
-    ;(begin (display x) (newline)
-      (cond ((not (pair? x)) #f)
-            ((= (length x) 1) #t)
-            (else (and (eq? (cadr x) '*) (recur? (cddr x))))))
-  (cond ((not (pair? x)) #f)
-        ((= (length x) 1) #f)
-        (else (recur? x))))
-; (deriv '((x + x) * x * x + (x + (x * (x + x)))) 'x)
-; '(x * x * x) '(x * x * x * x) '((x * x) * x * (x * (x + x)))
-; test place
-(define t1 '(x * x * x))
-(define t2 '(x * x * x * x))
-(define t3 '((x * x) * x * (x * (x + x))))
+(define (product? x) (and (pair? x) (eq? (cadr x) '*)))
 (define (multiplier p)
   (car p))
 (define (multiplicand p)
-  (if (= (length p) 3)
-      (caddr p)
-      (cddr p)))
+  (caddr p))
 (define (make-product m1 m2)
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
         ((=number? m1 1) m2)
@@ -108,8 +70,7 @@
 ; 找到所有的加法，然后中间的全加上括号，即找到最外层的所有加法，然后中间都是括号，分别运算，只有遇到全乘法，才是乘法，否则，就是加法
 ; 因为加法优先级低，先解析出来，参数自然是优先级高的了。
 
-; 关于exp n只能是证书，
-; A:
+
 ; (deriv '(x * (x * x)) 'x)
 ; (deriv '((x * x) * x) 'x)
 ; (deriv '(x + (x + x)) 'x)
@@ -120,10 +81,6 @@
 ; (deriv '(x ** (1 + y)) 'x)
 ; (deriv '(x ** x) 'x)
 ; (deriv '(x + (3 * (x ** (y + 2)))) 'x)
-; B:
-; (deriv '(x + x + x) 'x)
-; (deriv '(x + (x + (x + x))) 'x)
-; (deriv '(x + (x + (x * x))) 'x)
 
 ; (deriv '(x + (3 * (x + (y + 2)))) 'x)
 ; (deriv '(x * (x + (x * x))) 'x)

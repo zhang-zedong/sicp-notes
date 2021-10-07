@@ -1,5 +1,7 @@
 ; sec 2.3.2
 ; plus exercise
+#lang sicp
+
 (define (deriv exp var)
   (cond ((number? exp) 0)
         ((variable? exp) (if (same-variable? exp var) 1 0))
@@ -34,18 +36,16 @@
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 (define (sum? x) (and (pair? x) (eq? (car x) '+)))
 (define (addend s) (cadr s))
-(define (augend expr) 
-   (if (null? (cdddr expr)) 
-         (caddr expr) 
-         (make-sum (caddr expr) (cadddr expr)))) 
+(define (augend s)
+  (if (= (length s) 3)
+      (caddr s)
+      (append '(+) (cddr s))))
 (define (product? x) (and (pair? x) (eq? (car x) '*)))
 (define (multiplier p) (cadr p))
-(define (multiplicand expr) 
-   (let ((first (caddr expr)) 
-         (rest (cdddr expr))) 
-     (if (null? rest)
-         first 
-         (make-product first (cadddr expr))))) 
+(define (multiplicand p)
+  (if (= (length p) 3)
+      (caddr p)
+      (append '(*) (cddr p))))
 
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
@@ -65,4 +65,3 @@
 ; (deriv '(+ x x x) 'x)
 ; (deriv '(* x x x) 'x)
 ; (deriv '(* x y (+ x 3)) 'x)
-; (deriv '(** (+ x x x) (+ y y)) 'x)

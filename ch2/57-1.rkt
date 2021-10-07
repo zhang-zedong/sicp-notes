@@ -1,5 +1,8 @@
 ; sec 2.3.2
 ; plus exercise
+; 和57.rkt 差不多，细节上看了别人的答案，更好一些。
+#lang sicp
+
 (define (deriv exp var)
   (cond ((number? exp) 0)
         ((variable? exp) (if (same-variable? exp var) 1 0))
@@ -34,10 +37,18 @@
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 (define (sum? x) (and (pair? x) (eq? (car x) '+)))
 (define (addend s) (cadr s))
-(define (augend s) (caddr s))
+(define (augend expr) 
+   (if (null? (cdddr expr)) 
+         (caddr expr) 
+         (make-sum (caddr expr) (cadddr expr)))) 
 (define (product? x) (and (pair? x) (eq? (car x) '*)))
 (define (multiplier p) (cadr p))
-(define (multiplicand p) (caddr p))
+(define (multiplicand expr) 
+   (let ((first (caddr expr)) 
+         (rest (cdddr expr))) 
+     (if (null? rest)
+         first 
+         (make-product first (cadddr expr))))) 
 
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
@@ -54,9 +65,7 @@
         (else (list '* m1 m2))))
 
 ; test
-; (deriv '(** x 4) 'x)
-; (deriv '(** (* x y) 4) 'x)
-; (deriv '(** (+ x y) 4) 'x)
-; (deriv '(** x x) 'x)
-; (deriv '(** x (+ y 1)) 'x)
-; (deriv '(+ (+ y 1) -1) 'y)
+; (deriv '(+ x x x) 'x)
+; (deriv '(* x x x) 'x)
+; (deriv '(* x y (+ x 3)) 'x)
+; (deriv '(** (+ x x x) (+ y y)) 'x)
