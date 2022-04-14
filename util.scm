@@ -24,6 +24,7 @@
         a
         (gcd b (remainder a b))))
 
+; for MIT-scheme
 ; function table
 ; put and get borrowed
 (define *op-table* (make-hash-table))

@@ -1,3 +1,12 @@
+#lang sicp
+; get / put
+(#%require (only racket/base make-hash hash-ref hash-set!))
+(define *op-table* (make-hash))
+(define (put op type proc)
+  (hash-set! *op-table* (list op type) proc))
+(define (get op type)
+  (hash-ref *op-table* (list op type) #f))
+
 ; sum package
 (define (install-sum-package)
   (define (addend s) (car s))
@@ -81,12 +90,6 @@
   (if (pair? datum)
       (car datum)
       (error "Bad tagged datum: CONTENTS" datum)))
-; put and get
-(define *op-table* (make-hash-table))
-(define (put op type proc)
-  (hash-table/put! *op-table* (list op type) proc))
-(define (get op type)
-  (hash-table/get *op-table* (list op type) #f))
 ; install package
 (install-sum-package)
 (install-product-package)

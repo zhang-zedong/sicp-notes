@@ -1,4 +1,15 @@
-; what not (apply-generic 'add ) => 参数读进 args list
+#lang sicp
+; get / put
+(#%require (only racket/base make-hash hash-ref hash-set!))
+(define *op-table* (make-hash))
+(define (put op type proc)
+  (hash-set! *op-table* (list op type) proc))
+(define (get op type)
+  (hash-ref *op-table* (list op type) #f))
+; util
+(define (square x) (* x x))
+  
+; why not (apply-generic 'add ) => 参数读进 args list
 (define (add x y)
   (apply-generic 'add x y))
 (define (sub x y)
@@ -127,7 +138,7 @@
 (define (make-complex-from-mag-ang r a)
   ((get 'make-from-mag-ang 'complex) r a))
 
-;; rectangular implementation
+;; rectangular implementation of complex number
 (define (install-rectangular-package)
   ;; internal procedures
   (define (real-part z) (car z))
@@ -151,7 +162,7 @@
   (put 'make-from-mag-ang 'rectangular
       (lambda (r a) (tag (make-from-mag-ang r a))))
   '(install-rectangular-package done))
-; polar implementation
+; polar implementation of complex number
 (define (install-polar-package)
   ;; iternal procedures
   (define (real-part z) (* (magnitude z) (cos (angle z))))
@@ -198,11 +209,11 @@
               (error "No method for these types"
                      (list op type-tags)))))))
 ; coercion table
-(define *coercion-table* (make-hash-table))
+(define *coercion-table* (make-hash))
 (define (put-coercion type1 type2 proc)
-  (hash-table/put! *coercion-table* (list type1 type2) proc))
+  (hash-set! *coercion-table* (list type1 type2) proc))
 (define (get-coercion type1 type2)
-  (hash-table/get *coercion-table* (list type1 type2) #f))
+  (hash-ref *coercion-table* (list type1 type2) #f))
 ; 这个是错的，直接写成 '(type1 type2) 了，不是变量了
 ; (define (put-coercion type1 type2 proc)
 ;   (hash-table/put! *coercion-table* '(type1 type2) proc))
@@ -213,6 +224,7 @@
 (define (scheme-number->complex n)
   (make-complex-from-real-imag (contents n) 0))
 (put-coercion 'scheme-number 'complex scheme-number->complex)
+
 ; 2.81 a
 ; (define (scheme-number->scheme-number n) n)
 ; (define (complex->complex z) z)
@@ -242,12 +254,7 @@
     ((and (not (symbol? datum)) (number? datum)) datum)
     ((pair? datum) (cdr datum))
     (else (error "Bad tagged datum: CONTENTS" datum))))
-; put and get borrowed
-(define *op-table* (make-hash-table))
-(define (put op type proc)
-  (hash-table/put! *op-table* (list op type) proc))
-(define (get op type)
-  (hash-table/get *op-table* (list op type) #f))
+
 ;; install package
 (install-scheme-number-package)
 (install-rational-package)
@@ -263,6 +270,7 @@
 ; (hash-table/get *coercion-table* '(complex scheme-number) #f)
 ; (hash-table/get *coercion-table* '(scheme-number complex) #f)
 ; '(complex scheme-number) (list 'complex 'scheme-number) type1成符号，而不是变量了。
+; 没定义其他数字系统里的exp
 ; (exp 2 3)
 ; (exp (make-complex-from-real-imag 1 1) (make-complex-from-real-imag 1 1))
 ; (exp 2 (make-complex-from-real-imag 1 1))
