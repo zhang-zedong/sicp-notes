@@ -6,3 +6,5 @@
 In No.3 of run method, 
 - Type `(debug)` in terminal after running the code.
 - Insert `(display specific-variable) (newline)` in procedure.
+# Others
+- block comments `#|`, `|#`.
