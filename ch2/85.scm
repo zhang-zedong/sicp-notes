@@ -1,15 +1,16 @@
 #lang sicp
-; get / put
+;; hashtable get/put
 (#%require (only racket/base make-hash hash-ref hash-set!))
 (define *op-table* (make-hash))
 (define (put op type proc)
   (hash-set! *op-table* (list op type) proc))
 (define (get op type)
   (hash-ref *op-table* (list op type) #f))
-; util
+
+;; util
 (define (square x) (* x x))
   
-; why not (apply-generic 'add ) => 参数读进 args list
+;; API
 (define (add x y)
   (apply-generic 'add x y))
 (define (sub x y)
@@ -24,7 +25,8 @@
   (apply-generic 'exp x y))
 (define (=zero? x)
   (apply-generic '=zero? x))
-; scheme number
+
+;; scheme number
 (define (install-scheme-number-package)
   (define (tag x) (attach-tag 'scheme-number x))
   (put 'add '(scheme-number scheme-number)
@@ -42,10 +44,14 @@
   (put 'exp '(scheme-number scheme-number)
        (lambda (x y) (tag (expt x y))))
   (put 'make 'scheme-number (lambda (x) (tag x)))
+  ; raise
+  (put 'raise 'scheme-number (lambda (n) (make-rational n 1)))
   'done)
 (define (make-scheme-number n)
   ((get 'make 'scheme-number) n))
-; rational package
+
+
+;; rational package
 (define (install-rational-package)
   (define (numer x) (car x))
   (define (denom x) (cdr x))
@@ -86,10 +92,53 @@
        =zero?-rat)
   (put 'make 'rational
        (lambda (n d) (tag (make-rat n d))))
+  ; raise
+  (define (rational->real rn)
+    (let ((r (contents rn)))
+      (make-real (/ (numer r) (denom r)))))
+  (put 'raise 'rational rational->real)
+  ; project
+  (define (rational->scheme-number rn)
+    (let ((r (contents rn)))
+      (make-scheme-number (numer r))))
+  (put 'project '(rational scheme-number) rational->scheme-number)
   'done)
 (define (make-rational n d)
   ((get 'make 'rational) n d))
-; complex package
+
+;; real number
+(define (install-real-package)
+  (define (tag x) (attach-tag 'real x))
+  (put 'add '(real real)
+       (lambda (x y) (tag (+ x y))))
+  (put 'sub '(real real)
+       (lambda (x y) (tag (- x y))))
+  (put 'mul '(real real)
+       (lambda (x y) (tag (* x y))))
+  (put 'div '(real real)
+       (lambda (x y) (tag (/ x y))))
+  (put 'equ? '(real real)
+       =)
+  (put '=zero? '(real)
+       zero?)
+  (put 'make 'real
+       (lambda (x) (tag x)))
+  ; raise
+  (define (real->complex rn)
+    (make-complex-from-real-imag (contents rn) 0))
+  (put 'raise 'real real->complex)
+  ; project
+  (define (real->rational ren)
+    (make-rational (truncate (contents ren)) 1)) ; there is a problem, how to cut real number off to rational
+  (put 'project '(real rational) real->rational)
+  (define (real->scheme-number ren)
+    (make-scheme-number (truncate (contents ren))))
+  (put 'project '(real scheme-number) real->scheme-number)
+  'done)
+(define (make-real x)
+  ((get 'make 'real) x))
+
+;; complex package
 (define (install-complex-package)
   (define (make-from-real-imag x y)
     ((get 'make-from-real-imag 'rectangular) x y))
@@ -132,12 +181,24 @@
     (lambda (x y) (tag (make-from-real-imag x y))))
   (put 'make-from-mag-ang 'complex
     (lambda (r a) (tag (make-from-mag-ang r a))))
+  ; project
+  (define (complex->real cn)
+    (let ((n (contents cn)))
+      (make-real (real-part n))))
+  (put 'project '(complex real) complex->real)
+  (define (complex->rational cn)
+    (let ((n (contents cn)))
+      (make-rational (truncate (real-part n)) 1))) ; similar problem
+  (put 'project '(complex rational) complex->rational)
+  (define (complex->scheme-number cn)
+    (let ((n (contents cn)))
+      (make-scheme-number (truncate (real-part n)))))
+  (put 'project '(complex scheme-number) complex->scheme-number)
   'done)
 (define (make-complex-from-real-imag x y)
   ((get 'make-from-real-imag 'complex) x y))
 (define (make-complex-from-mag-ang r a)
   ((get 'make-from-mag-ang 'complex) r a))
-
 ;; rectangular implementation of complex number
 (define (install-rectangular-package)
   ;; internal procedures
@@ -162,9 +223,9 @@
   (put 'make-from-mag-ang 'rectangular
       (lambda (r a) (tag (make-from-mag-ang r a))))
   '(install-rectangular-package done))
-; polar implementation of complex number
+;; polar implementation of complex number
 (define (install-polar-package)
-  ;; iternal procedures
+  ; iternal procedures
   (define (real-part z) (* (magnitude z) (cos (angle z))))
   (define (imag-part z) (* (magnitude z) (sin (angle z))))
   (define (magnitude z) (car z))
@@ -173,7 +234,7 @@
     (cons (sqrt (+ (square x) (square y)))
           (atan y x)))
   (define (make-from-mag-ang r a) (cons r a))
-  ;; interface to the rest of the system
+  ; interface to the rest of the system
   (define (tag x) (attach-tag 'polar x))
   (put 'real-part '(polar) real-part)
   (put 'imag-part '(polar) imag-part)
@@ -184,53 +245,6 @@
   (put 'make-from-mag-ang 'polar
        (lambda (r a) (tag (make-from-mag-ang r a))))
   '(install-polar-package done))
-; put it together
-(define (apply-generic op . args)
-  (let ((type-tags (map type-tag args)))
-    (let ((proc (get op type-tags)))
-      (if proc
-          (apply proc (map contents args))
-          (if (= (length args) 2)
-              (let ((type1 (car type-tags))
-                    (type2 (cadr type-tags))
-                    (a1 (car args))
-                    (a2 (cadr args)))
-                (if (eq? type1 type2)
-                    (error "No method for these types"
-                           (list op type-tags))
-                    (let ((t1->t2 (get-coercion type1 type2))
-                          (t2->t1 (get-coercion type2 type1)))
-                        (cond (t1->t2
-                                (apply-generic op (t1->t2 a1) a2))
-                              (t2->t1
-                                (apply-generic op a1 (t2->t1 a2)))
-                              (else (error "No method for these types"
-                                          (list op type-tags)))))))
-              (error "No method for these types"
-                     (list op type-tags)))))))
-; coercion table
-(define *coercion-table* (make-hash))
-(define (put-coercion type1 type2 proc)
-  (hash-set! *coercion-table* (list type1 type2) proc))
-(define (get-coercion type1 type2)
-  (hash-ref *coercion-table* (list type1 type2) #f))
-; 这个是错的，直接写成 '(type1 type2) 了，不是变量了
-; (define (put-coercion type1 type2 proc)
-;   (hash-table/put! *coercion-table* '(type1 type2) proc))
-; (define (get-coercion type1 type2)
-;   (hash-table/get *coercion-table* '(type1 type2) #f))
-
-; coercion
-(define (scheme-number->complex n)
-  (make-complex-from-real-imag (contents n) 0))
-(put-coercion 'scheme-number 'complex scheme-number->complex)
-
-; 2.81 a
-; (define (scheme-number->scheme-number n) n)
-; (define (complex->complex z) z)
-; (put-coercion 'scheme-number 'scheme-number scheme-number->scheme-number)
-; (put-coercion 'complex 'complex complex->complex)
-; generic function or API
 (define (real-part z) (apply-generic 'real-part z))
 (define (imag-part z) (apply-generic 'imag-part z))
 (define (magnitude z) (apply-generic 'magnitude z))
@@ -239,7 +253,75 @@
   ((get 'make-from-real-imag 'rectangular) x y))
 (define (make-from-mag-ang r a)
   ((get 'make-from-mag-ang 'polar) r a))
-; helper
+
+;; generic program
+; generic apply
+(define (apply-generic op . args)
+  (define op-methods '(add sub mul div))
+  (define (in? op op-methods)
+    (define (iter op op-methods)
+      (if (null? op-methods)
+          #f
+          (or (eq? op (car op-methods)) (iter op (cdr op-methods)))))
+    (iter op op-methods))
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (if (in? op op-methods)
+              (drop (apply proc (map contents args)))
+              (apply proc (map contents args)))
+          (if (= (length args) 2)
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (cond
+                  ((eq? type1 type2)
+                   (error "No method for these types"
+                          (list op type-tags)))
+                  ((lower-than type1 type2)
+                   (apply-generic op (raise a1) a2))
+                  (else
+                   (apply-generic op a1 (raise a2)))))
+              (error "No method for these types"
+                     (list op type-tags)))))))
+; generic raise
+(define (raise number)
+  (let ((type (type-tag number)))
+    (let ((raise-proc (get 'raise type)))
+      (if raise-proc
+          (raise-proc number)
+          number))))
+(define type-tower '(scheme-number rational real complex))
+(define (lower-than type1 type2)
+  (define (iter type-tower)
+    (cond
+      ((null? type-tower) (error "No these type in type tower" (list type1 type2)))
+      ((eq? type1 (car type-tower)) #t)
+      ((eq? type2 (car type-tower)) #f)
+      (else (iter (cdr type-tower)))))
+  (iter type-tower))
+; generic project
+(define (project number target-type)
+  (let ((type (type-tag number)))
+    (let ((project-proc (get 'project (list type target-type))))
+      (if project-proc
+          (project-proc number)
+          (error "No project method for these type" (list type target-type))))))
+; generic drop
+(define (drop number)
+  (define (iter type-tower type)
+    (cond
+      ((null? type-tower) (error "Type tower climb to highist" type))
+      ((eq? (car type-tower) type) number)
+      ((equ? (project number (car type-tower)) number) (project number (car type-tower)))
+      (else (iter (cdr type-tower) type))))
+  (let ((type (type-tag number)))
+    (iter type-tower type)))
+    
+        
+
+;; generic function utility
 (define (attach-tag type-tag contents)
   (if (and (not (symbol? contents)) (number? contents) (eq? type-tag 'scheme-number))
       contents
@@ -258,20 +340,15 @@
 ;; install package
 (install-scheme-number-package)
 (install-rational-package)
+(install-real-package)
 (install-rectangular-package)
 (install-polar-package)
 (install-complex-package)
 
-; test
-; (add 4 (make-complex-from-real-imag 1 1))
-; (add 4 (make-complex-from-mag-ang 1 1))
-; (add (make-complex-from-real-imag 1 1) 4)
-; (add (make-complex-from-mag-ang 1 1) 4)
-; (hash-table/get *coercion-table* '(complex scheme-number) #f)
-; (hash-table/get *coercion-table* '(scheme-number complex) #f)
-; '(complex scheme-number) (list 'complex 'scheme-number) type1成符号，而不是变量了。
-; 没定义其他数字系统里的exp
-; (exp 2 3)
-; (exp (make-complex-from-real-imag 1 1) (make-complex-from-real-imag 1 1))
-; (exp 2 (make-complex-from-real-imag 1 1))
-; (exp (make-complex-from-real-imag 1 1) 2)
+;; test
+(define sn (make-scheme-number 1))
+(define rn (make-rational 1 2))
+(define rn1 (make-rational 1 2))
+(define ren (make-real 4))
+(define cn (make-complex-from-real-imag 5 1))
+(define cn1 (make-complex-from-real-imag 5/4 -1))
