@@ -1,3 +1,4 @@
+#lang sicp
 (define (make-queue)
   (let ((front-ptr '())
         (rear-ptr '()))
@@ -48,3 +49,4 @@
 ; ((q1 'insert-queue!) 'c)
 ; (q1 'print)
 ; (q1 'delete-queue!)
+; ((((q1 'insert-queue!) 'd) 'insert-queue!) 'e)

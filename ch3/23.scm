@@ -1,3 +1,4 @@
+#lang sicp
 ; deque
 (define (node item)
   (cons item (cons '() '())))
@@ -86,3 +87,21 @@
             (set-cdr! (cdr new-rear) '())
             (set-rear-ptr! deque new-rear)
             deque))))
+
+(define (print deque)
+  (define (iter cur-ptr)
+    (if (null? cur-ptr)
+        (newline)
+        (begin
+          (display (car cur-ptr))
+          (display " ")
+          (iter (cddr cur-ptr)))))
+  (iter (car deque)))
+  
+
+;; test
+; (define dq (make-deque))
+; (front-insert-deque! dq 1)
+; (front-insert-deque! dq 2)
+; (front-insert-deque! dq 3)
+; (front-insert-deque! dq 4)
