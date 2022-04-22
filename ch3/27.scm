@@ -42,14 +42,28 @@
             ((eq? m 'insert!) insert!)
             (else (error "Unknown operation: TABLE" m))))
     dispatch))
+(define (lookup key table) ((table 'lookup) key))
+(define (insert! key value table) ((table 'insert!) key value))
 
-; test
-(define t (make-table))
-((t 'insert!) 1 'a)
-((t 'insert!) 2 'b)
-((t 'insert!) 3 'c)
-((t 'insert!) 4 'd)
-((t 'insert!) 4 'f)
-((t 'insert!) 5 'e)
-((t 'lookup) 1)
-((t 'lookup) 4)
+(define (memoize f)
+  (let ((table (make-table)))
+    (lambda (x)
+      (let ((previously-computed-result
+            (lookup x table)))
+        (or previously-computed-result
+            (let ((result (f x)))
+              (insert! x result table)
+              result))))))
+
+(define memo-fib
+  (memoize
+   (lambda (n)
+     (cond ((= n 0) 0)
+           ((= n 1) 1)
+           (else (+ (memo-fib (- n 1))
+                    (memo-fib (- n 2))))))))
+
+(memo-fib 7)
+
+; https://github.com/kana/sicp/blob/master/ex-3.27.md
+; http://vishy-ranganath-sicp.blogspot.com/2019/02/sicp-exercise-327-memoization.html
