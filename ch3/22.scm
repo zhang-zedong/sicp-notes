@@ -41,6 +41,10 @@
         ((eq? m 'print) (print))
         (else (error "Unknown method" m))))
     dispatch))
+(define (front-queue q) (q 'front-queue))
+(define (insert-queue! q) (q 'insert-queue!))
+(define (delete-queue! q) (q 'delete-queue!))
+(define (print q) (q 'print))
 
 
 ; (define q1 (make-queue))

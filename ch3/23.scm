@@ -1,5 +1,6 @@
 #lang sicp
-; deque
+;; deque
+
 (define (node item)
   (cons item (cons '() '())))
 
